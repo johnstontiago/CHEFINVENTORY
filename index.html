@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="ChefManager - Sistema de Gestión de Pedidos e Inventario">
+    
+    <title>ChefManager - PANZZONI</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- QR Code Generator -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    
+    <!-- HTML5 QR Scanner -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- ============================================ -->
+    <!-- PANTALLA DE CARGA -->
+    <!-- ============================================ -->
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">🍕</div>
+            <h1>ChefManager</h1>
+            <div class="loading-spinner"></div>
+            <p>Cargando...</p>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- PANTALLA DE LOGIN -->
+    <!-- ============================================ -->
+    <div id="auth-screen" class="auth-screen hidden">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-logo">🍕</div>
+                <h1>PANZZONI</h1>
+                <p>ChefManager v2.0</p>
+            </div>
+            
+            <div id="login-form" class="auth-form">
+                <h2>Iniciar Sesión</h2>
+                <input type="email" id="login-email" class="input" placeholder="Email" autocomplete="email">
+                <input type="password" id="login-password" class="input" placeholder="Contraseña" autocomplete="current-password">
+                <button class="btn btn-primary" onclick="handleLogin()">Entrar</button>
+                <p class="auth-switch">¿No tienes cuenta? <a href="#" onclick="showRegister()">Registrarse</a></p>
+            </div>
+            
+            <div id="register-form" class="auth-form hidden">
+                <h2>Crear Cuenta</h2>
+                <input type="text" id="register-name" class="input" placeholder="Nombre completo">
+                <input type="email" id="register-email" class="input" placeholder="Email" autocomplete="email">
+                <input type="password" id="register-password" class="input" placeholder="Contraseña (mín. 6 caracteres)">
+                <select id="register-unidad" class="input">
+                    <option value="">Seleccionar Unidad...</option>
+                </select>
+                <button class="btn btn-primary" onclick="handleRegister()">Crear Cuenta</button>
+                <p class="auth-switch">¿Ya tienes cuenta? <a href="#" onclick="showLogin()">Iniciar Sesión</a></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- APLICACIÓN PRINCIPAL -->
+    <!-- ============================================ -->
+    <div id="app" class="app hidden">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-top">
+                <div class="header-brand">
+                    <span class="header-logo">🍕</span>
+                    <div>
+                        <h1>PANZZONI</h1>
+                        <p id="header-unidad">Cargando...</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" onclick="showNotifications()" id="btn-notifications">
+                        🔔
+                        <span class="badge hidden" id="notification-badge">0</span>
+                    </button>
+                    <button class="icon-btn" onclick="showUserMenu()">👤</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Contenido Principal -->
+        <main class="main-content">
+            <!-- ============================================ -->
+            <!-- VISTA: PEDIR -->
+            <!-- ============================================ -->
+            <section id="view-pedir" class="view-section">
+                <div class="section-header">
+                    <h2>🍔 Nuevo Pedido</h2>
+                    <select id="pedido-unidad" class="select-inline" onchange="cambiarUnidadPedido()">
+                        <!-- Se llena dinámicamente -->
+                    </select>
+                </div>
+
+                <!-- Filtros de categoría -->
+                <div class="category-filters" id="category-filters">
+                    <button class="filter-chip active" data-category="all">Todos</button>
+                    <!-- Se llenan dinámicamente -->
+                </div>
+
+                <!-- Búsqueda -->
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-productos" class="search-input" placeholder="Buscar producto..." oninput="filtrarProductos()">
+                </div>
+
+                <!-- Lista de productos -->
+                <div id="productos-list" class="productos-grid">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- VISTA: CARRITO -->
+            <!-- ============================================ -->
+            <section id="view-carrito" class="view-section hidden">
+                <div class="section-header">
+                    <h2>🛒 Carrito</h2>
+                    <span id="carrito-count" class="badge-count">0 items</span>
+                </div>
+
+                <div id="carrito-list" class="carrito-list">
+                    <!-- Se llena dinámicamente -->
+                </div>
+
+                <div id="carrito-empty" class="empty-state">
+                    <span class="empty-icon">🛒</span>
+                    <p>El carrito está vacío</p>
+                    <button class="btn btn-outline" onclick="changeView('view-pedir')">Agregar productos</button>
+                </div>
+
+                <div id="carrito-actions" class="carrito-actions hidden">
+                    <textarea id="pedido-notas" class="input" placeholder="Notas del pedido (opcional)" rows="2"></textarea>
+                    <button class="btn btn-success" onclick="enviarPedido()">
+                        <span>☁️</span> Enviar Pedido
+                    </button>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="copiarPedido()">📋 Copiar</button>
+                        <button class="btn btn-secondary" onclick="exportarCSV()">📊 CSV</button>
+                    </div>
+                    <button class="btn btn-danger-outline" onclick="vaciarCarrito()">🗑️ Vaciar Carrito</button>
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- VISTA: RECEPCIÓN -->
+            <!-- ============================================ -->
+            <section id="view-recepcion" class="view-section hidden">
+                <div class="section-header">
+                    <h2>📦 Recepción</h2>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs">
+                    <button class="tab active" data-tab="pendientes" onclick="switchRecepcionTab('pendientes')">Pendientes</button>
+                    <button class="tab" data-tab="recibidos" onclick="switchRecepcionTab('recibidos')">Recibidos Hoy</button>
+                </div>
+
+                <!-- Lista de pedidos pendientes -->
+                <div id="recepcion-pendientes" class="recepcion-list">
+                    <!-- Se llena dinámicamente -->
+                </div>
+
+                <!-- Lista de recibidos hoy -->
+                <div id="recepcion-recibidos" class="recepcion-list hidden">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- VISTA: INVENTARIO -->
+            <!-- ============================================ -->
+            <section id="view-inventario" class="view-section hidden">
+                <div class="section-header">
+                    <h2>📊 Inventario</h2>
+                    <button class="btn btn-sm btn-primary" onclick="showFiltrosInventario()">🔍 Filtrar</button>
+                </div>
+
+                <!-- Resumen rápido -->
+                <div class="inventory-summary">
+                    <div class="summary-card">
+                        <span class="summary-value" id="inv-total">0</span>
+                        <span class="summary-label">Total Items</span>
+                    </div>
+                    <div class="summary-card warning">
+                        <span class="summary-value" id="inv-por-caducar">0</span>
+                        <span class="summary-label">Por Caducar</span>
+                    </div>
+                    <div class="summary-card danger">
+                        <span class="summary-value" id="inv-bajo-stock">0</span>
+                        <span class="summary-label">Bajo Stock</span>
+                    </div>
+                </div>
+
+                <!-- Lista de inventario -->
+                <div id="inventario-list" class="inventario-list">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- VISTA: CONSUMO -->
+            <!-- ============================================ -->
+            <section id="view-consumo" class="view-section hidden">
+                <div class="section-header">
+                    <h2>🔻 Consumo</h2>
+                </div>
+
+                <!-- Escáner QR -->
+                <div class="scanner-container">
+                    <div id="qr-reader" class="qr-reader"></div>
+                    <button class="btn btn-primary" onclick="toggleScanner()">
+                        <span id="scanner-btn-text">📷 Escanear QR</span>
+                    </button>
+                </div>
+
+                <!-- Entrada manual -->
+                <div class="manual-entry">
+                    <p>O ingresa el código manualmente:</p>
+                    <div class="input-group">
+                        <input type="text" id="codigo-manual" class="input" placeholder="Ej: L001-20250315-20231223">
+                        <button class="btn btn-primary" onclick="buscarPorCodigo()">Buscar</button>
+                    </div>
+                </div>
+
+                <!-- Resultado del escaneo -->
+                <div id="consumo-result" class="consumo-result hidden">
+                    <!-- Se llena dinámicamente -->
+                </div>
+
+                <!-- Historial de consumos recientes -->
+                <div class="consumo-historial">
+                    <h3>Consumos Recientes</h3>
+                    <div id="consumos-recientes">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- VISTA: HISTORIAL -->
+            <!-- ============================================ -->
+            <section id="view-historial" class="view-section hidden">
+                <div class="section-header">
+                    <h2>📋 Historial</h2>
+                    <select id="historial-filtro" class="select-inline" onchange="filtrarHistorial()">
+                        <option value="all">Todos</option>
+                        <option value="borrador">Borradores</option>
+                        <option value="enviado">Enviados</option>
+                        <option value="parcial">Parciales</option>
+                        <option value="recibido">Recibidos</option>
+                    </select>
+                </div>
+
+                <div id="historial-list" class="historial-list">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </section>
+
+            <!-- ============================================ -->
+            <!-- VISTA: ADMIN -->
+            <!-- ============================================ -->
+            <section id="view-admin" class="view-section hidden">
+                <div class="section-header">
+                    <h2>⚙️ Administración</h2>
+                </div>
+
+                <!-- Tabs de Admin -->
+                <div class="admin-tabs">
+                    <button class="admin-tab active" onclick="switchAdminTab('productos')">📦 Productos</button>
+                    <button class="admin-tab" onclick="switchAdminTab('proveedores')">🚚 Proveedores</button>
+                    <button class="admin-tab" onclick="switchAdminTab('usuarios')">👥 Usuarios</button>
+                    <button class="admin-tab" onclick="switchAdminTab('reportes')">📈 Reportes</button>
+                </div>
+
+                <!-- Panel Productos -->
+                <div id="admin-productos" class="admin-panel">
+                    <div class="panel-header">
+                        <input type="text" id="search-admin-productos" class="input" placeholder="🔍 Buscar producto..." oninput="filtrarAdminProductos()">
+                        <button class="btn btn-primary" onclick="showModalProducto()">+ Nuevo</button>
+                    </div>
+                    <div id="admin-productos-list" class="admin-list">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Panel Proveedores -->
+                <div id="admin-proveedores" class="admin-panel hidden">
+                    <div class="panel-header">
+                        <input type="text" id="search-admin-proveedores" class="input" placeholder="🔍 Buscar proveedor..." oninput="filtrarAdminProveedores()">
+                        <button class="btn btn-primary" onclick="showModalProveedor()">+ Nuevo</button>
+                    </div>
+                    <div id="admin-proveedores-list" class="admin-list">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Panel Usuarios -->
+                <div id="admin-usuarios" class="admin-panel hidden">
+                    <div class="panel-header">
+                        <span class="panel-title">Gestión de Usuarios</span>
+                        <button class="btn btn-primary" onclick="showModalUsuario()">+ Invitar</button>
+                    </div>
+                    <div id="admin-usuarios-list" class="admin-list">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Panel Reportes -->
+                <div id="admin-reportes" class="admin-panel hidden">
+                    <div class="reportes-grid">
+                        <button class="reporte-btn" onclick="generarReporte('inventario')">
+                            <span class="reporte-icon">📊</span>
+                            <span>Inventario Actual</span>
+                        </button>
+                        <button class="reporte-btn" onclick="generarReporte('movimientos')">
+                            <span class="reporte-icon">📈</span>
+                            <span>Movimientos</span>
+                        </button>
+                        <button class="reporte-btn" onclick="generarReporte('caducidad')">
+                            <span class="reporte-icon">⏰</span>
+                            <span>Por Caducar</span>
+                        </button>
+                        <button class="reporte-btn" onclick="generarReporte('pedidos')">
+                            <span class="reporte-icon">📦</span>
+                            <span>Pedidos</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Backup/Restore -->
+                <div class="admin-backup">
+                    <h3>💾 Gestión de Datos</h3>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="exportarBackup()">⬇️ Exportar Backup</button>
+                        <button class="btn btn-outline" onclick="document.getElementById('import-file').click()">⬆️ Importar</button>
+                        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importarBackup(event)">
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Barra de carrito flotante -->
+        <div id="floating-cart" class="floating-cart" onclick="changeView('view-carrito')">
+            <div class="floating-cart-info">
+                <span class="cart-icon">🛒</span>
+                <span id="floating-cart-count">0</span> items
+            </div>
+            <span class="floating-cart-arrow">→</span>
+        </div>
+
+        <!-- Navegación inferior -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-view="view-pedir" onclick="changeView('view-pedir')">
+                <span class="nav-icon">🍔</span>
+                <span class="nav-label">Pedir</span>
+            </button>
+            <button class="nav-item" data-view="view-recepcion" onclick="changeView('view-recepcion')">
+                <span class="nav-icon">📦</span>
+                <span class="nav-label">Recepción</span>
+            </button>
+            <button class="nav-item" data-view="view-inventario" onclick="changeView('view-inventario')">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Inventario</span>
+            </button>
+            <button class="nav-item" data-view="view-consumo" onclick="changeView('view-consumo')">
+                <span class="nav-icon">🔻</span>
+                <span class="nav-label">Consumo</span>
+            </button>
+            <button class="nav-item" data-view="view-historial" onclick="changeView('view-historial')">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">Historial</span>
+            </button>
+            <button class="nav-item" data-view="view-admin" onclick="changeView('view-admin')">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Admin</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- MODALES -->
+    <!-- ============================================ -->
+    
+    <!-- Modal: Usuario Menu -->
+    <div id="modal-user" class="modal">
+        <div class="modal-content modal-sm">
+            <div class="user-info">
+                <div class="user-avatar">👤</div>
+                <div class="user-details">
+                    <h3 id="user-name">Usuario</h3>
+                    <p id="user-email">email@ejemplo.com</p>
+                    <span id="user-role" class="role-badge">Rol</span>
+                </div>
+            </div>
+            <div class="user-actions">
+                <button class="btn btn-outline" onclick="cambiarUnidad()">🏠 Cambiar Unidad</button>
+                <button class="btn btn-outline" onclick="cambiarPin()">🔐 Cambiar PIN</button>
+                <button class="btn btn-danger" onclick="handleLogout()">🚪 Cerrar Sesión</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Producto -->
+    <div id="modal-producto" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-producto-title">Nuevo Producto</h3>
+                <button class="modal-close" onclick="closeModal('modal-producto')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="producto-id">
+                <input type="text" id="producto-nombre" class="input" placeholder="Nombre del producto">
+                <input type="text" id="producto-marca" class="input" placeholder="Marca">
+                <select id="producto-categoria" class="input">
+                    <!-- Se llena dinámicamente -->
+                </select>
+                <input type="text" id="producto-formato" class="input" placeholder="Formato (ej: Caja 6u)">
+                <select id="producto-proveedor" class="input">
+                    <!-- Se llena dinámicamente -->
+                </select>
+                <input type="number" id="producto-precio" class="input" placeholder="Precio referencia" step="0.01">
+                <input type="number" id="producto-stock-min" class="input" placeholder="Stock mínimo" value="0">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-producto')">Cancelar</button>
+                <button class="btn btn-success" onclick="guardarProducto()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Proveedor -->
+    <div id="modal-proveedor" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-proveedor-title">Nuevo Proveedor</h3>
+                <button class="modal-close" onclick="closeModal('modal-proveedor')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="proveedor-id">
+                <input type="text" id="proveedor-nombre" class="input" placeholder="Nombre de la empresa">
+                <input type="text" id="proveedor-contacto" class="input" placeholder="Persona de contacto">
+                <input type="tel" id="proveedor-telefono" class="input" placeholder="Teléfono">
+                <input type="email" id="proveedor-email" class="input" placeholder="Email">
+                <textarea id="proveedor-notas" class="input" placeholder="Notas" rows="2"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-proveedor')">Cancelar</button>
+                <button class="btn btn-success" onclick="guardarProveedor()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Recepción de Item -->
+    <div id="modal-recepcion" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📦 Recibir Item</h3>
+                <button class="modal-close" onclick="closeModal('modal-recepcion')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="recepcion-item-id">
+                <div class="recepcion-producto-info" id="recepcion-producto-info">
+                    <!-- Info del producto -->
+                </div>
+                <div class="form-group">
+                    <label>Cantidad Recibida</label>
+                    <input type="number" id="recepcion-cantidad" class="input" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>Lote del Proveedor</label>
+                    <input type="text" id="recepcion-lote" class="input" placeholder="Ej: L001, ABC123">
+                </div>
+                <div class="form-group">
+                    <label>Fecha de Caducidad</label>
+                    <input type="date" id="recepcion-caducidad" class="input">
+                </div>
+                <div class="form-group">
+                    <label>Ubicación (opcional)</label>
+                    <input type="text" id="recepcion-ubicacion" class="input" placeholder="Ej: Almacén A, Nevera 2">
+                </div>
+                <div class="codigo-preview">
+                    <label>Código único generado:</label>
+                    <div id="codigo-preview-value" class="codigo-value">---</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-recepcion')">Cancelar</button>
+                <button class="btn btn-success" onclick="confirmarRecepcion()">✓ Confirmar Recepción</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Confirmar Consumo -->
+    <div id="modal-consumo" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔻 Registrar Consumo</h3>
+                <button class="modal-close" onclick="closeModal('modal-consumo')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="consumo-inventario-id">
+                <div id="consumo-item-info" class="consumo-item-info">
+                    <!-- Info del item -->
+                </div>
+                <div class="form-group">
+                    <label>Cantidad a consumir</label>
+                    <input type="number" id="consumo-cantidad" class="input" step="0.01" min="0.01">
+                    <small id="consumo-disponible">Disponible: 0</small>
+                </div>
+                <div class="form-group">
+                    <label>Motivo (opcional)</label>
+                    <select id="consumo-motivo" class="input">
+                        <option value="consumo">Consumo normal</option>
+                        <option value="merma">Merma / Desperdicio</option>
+                        <option value="ajuste">Ajuste de inventario</option>
+                    </select>
+                </div>
+                <textarea id="consumo-notas" class="input" placeholder="Notas adicionales" rows="2"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-consumo')">Cancelar</button>
+                <button class="btn btn-danger" onclick="confirmarConsumo()">🔻 Confirmar Consumo</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle de Pedido -->
+    <div id="modal-pedido-detalle" class="modal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="pedido-detalle-title">Pedido #000</h3>
+                <button class="modal-close" onclick="closeModal('modal-pedido-detalle')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="pedido-detalle-info" class="pedido-info">
+                    <!-- Info del pedido -->
+                </div>
+                <div id="pedido-detalle-items" class="pedido-items">
+                    <!-- Items del pedido -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('modal-pedido-detalle')">Cerrar</button>
+                <button class="btn btn-primary" id="btn-editar-pedido" onclick="editarPedido()">✏️ Editar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Etiqueta QR -->
+    <div id="modal-qr" class="modal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3>🏷️ Etiqueta QR</h3>
+                <button class="modal-close" onclick="closeModal('modal-qr')">✕</button>
+            </div>
+            <div class="modal-body qr-modal-body">
+                <div id="qr-canvas" class="qr-canvas"></div>
+                <div id="qr-info" class="qr-info">
+                    <p id="qr-producto"></p>
+                    <p id="qr-codigo" class="qr-codigo"></p>
+                    <p id="qr-caducidad"></p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="imprimirEtiqueta()">🖨️ Imprimir</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Notificaciones -->
+    <div id="modal-notifications" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔔 Notificaciones</h3>
+                <button class="modal-close" onclick="closeModal('modal-notifications')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div id="notifications-list" class="notifications-list">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <span id="toast-message">Mensaje</span>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/pedidos.js"></script>
+    <script src="js/recepcion.js"></script>
+    <script src="js/inventario.js"></script>
+    <script src="js/consumo.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PANZZONI - Sistema Central Premium</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --gold: #d4af37;
+            --gold-dark: #b8941f;
+            --gold-light: #f0d878;
+            --black: #1a1a1a;
+            --dark-grey: #2d2d2d;
+            --cream: #f8f6f0;
+            --white: #ffffff;
+            --green: #2d5016;
+            --red: #8b1a1a;
+            --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.15);
+            --shadow-dark: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+        
+        body { 
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, var(--cream) 0%, #fdfbf5 50%, var(--cream) 100%);
+            color: var(--black);
+            padding-bottom: 100px;
+            min-height: 100vh;
+        }
+
+        /* Header Premium */
+        .header { 
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark-grey) 100%);
+            color: var(--gold);
+            padding: 28px 20px;
+            text-align: center;
+            box-shadow: var(--shadow-dark);
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        }
+        .header h1 { 
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .header p {
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--gold-light);
+            font-weight: 300;
+        }
+
+        /* Navigation */
+        .mobile-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(180deg, var(--black) 0%, var(--dark-grey) 100%);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 25px 0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+            z-index: 100;
+            border-top: 2px solid var(--gold);
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7rem;
+            color: #888;
+            background: none;
+            border: none;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .nav-item.active {
+            color: var(--gold);
+            transform: translateY(-2px);
+        }
+        .nav-icon { 
+            font-size: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+        }
+
+        /* Container */
+        .container { 
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px 16px;
+        }
+
+        /* Cards Premium */
+        .card { 
+            background: var(--white);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow-gold);
+            margin-bottom: 16px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(212, 175, 55, 0.25);
+        }
+
+        .hidden { display: none !important; }
+
+        /* Inputs Premium */
+        .input { 
+            width: 100%;
+            padding: 16px;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            border-radius: 12px;
+            font-size: 15px;
+            margin-bottom: 14px;
+            background: var(--cream);
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+        }
+        .input:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+        }
+
+        /* Buttons Premium */
+        .btn { 
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-size: 13px;
+        }
+        .btn:active { transform: scale(0.98); }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            color: var(--black);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--green) 0%, #3a6b1f 100%);
+            color: var(--white);
+            box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--dark-grey) 0%, #404040 100%);
+            color: var(--white);
+        }
+
+        .btn-outline { 
+            background: transparent;
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            padding: 10px 18px;
+            border-radius: 25px;
+            font-size: 12px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+            display: inline-block;
+            width: auto;
+            font-weight: 600;
+        }
+        .btn-outline.active {
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        /* Action Buttons */
+        .action-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            margin-left: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        .btn-edit {
+            background: linear-gradient(135deg, #e8f4ff 0%, #d4e7ff 100%);
+            color: #2563eb;
+        }
+        .btn-del {
+            background: linear-gradient(135deg, #fff1f1 0%, #ffe4e4 100%);
+            color: var(--red);
+        }
+
+        /* Modals Premium */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 26, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .modal-content {
+            background: linear-gradient(135deg, var(--white) 0%, var(--cream) 100%);
+            padding: 28px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 85vh;
+            overflow-y: auto;
+            text-align: center;
+            border: 2px solid var(--gold);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-content h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            color: var(--gold);
+            margin-bottom: 10px;
+        }
+
+        /* PIN Display */
+        .pin-display {
+            background: linear-gradient(135deg, var(--cream) 0%, #f0ead6 100%);
+            padding: 18px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            font-size: 28px;
+            letter-spacing: 12px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--gold);
+            border: 2px solid var(--gold);
+        }
+        
+        .pin-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .pin-btn {
+            padding: 18px;
+            background: linear-gradient(135deg, var(--white) 0%, var(--cream) 100%);
+            border: 2px solid var(--gold);
+            border-radius: 15px;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--gold);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .pin-btn:active {
+            transform: scale(0.95);
+            background: var(--gold);
+            color: var(--black);
+        }
+
+        /* Sticky Cart */
+        .summary-bar {
+            position: fixed;
+            bottom: 90px;
+            left: 16px;
+            right: 16px;
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark-grey) 100%);
+            color: var(--white);
+            padding: 18px;
+            border-radius: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            z-index: 90;
+            transform: translateY(200%);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 2px solid var(--gold);
+            cursor: pointer;
+        }
+        .summary-bar.visible {
+            transform: translateY(0);
+        }
+        .summary-bar:hover {
+            background: linear-gradient(135deg, var(--dark-grey) 0%, var(--black) 100%);
+        }
+
+        /* Admin Item */
+        .admin-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        .admin-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Product Item */
+        .product-item {
+            border-left: 4px solid transparent;
+            padding: 14px;
+            display: flex;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+        }
+        .product-item.in-cart {
+            border-left-color: var(--gold);
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0.08) 0%, transparent 100%);
+        }
+
+        /* Toast Premium */
+        #toast {
+            visibility: hidden;
+            background: linear-gradient(135deg, var(--black) 0%, var(--dark-grey) 100%);
+            color: var(--gold);
+            text-align: center;
+            border-radius: 50px;
+            padding: 14px 28px;
+            position: fixed;
+            z-index: 3000;
+            left: 50%;
+            top: 30px;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border: 2px solid var(--gold);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--gold);
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Section Headers */
+        .section-header {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Responsive Design */
+        @media (min-width: 768px) {
+            .container {
+                padding: 30px 24px;
+            }
+            .header h1 {
+                font-size: 3rem;
+            }
+            .mobile-nav {
+                padding: 16px 0 30px 0;
+            }
+            .nav-item {
+                font-size: 0.8rem;
+            }
+            .nav-icon {
+                font-size: 1.7rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                max-width: 1200px;
+            }
+            .summary-bar {
+                max-width: 1168px;
+                left: 50%;
+                transform: translateX(-50%) translateY(200%);
+            }
+            .summary-bar.visible {
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Unit Selector */
+        .unit-selector {
+            background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .unit-selector select {
+            background: var(--white);
+            border: none;
+            color: var(--black);
+            font-weight: 700;
+            font-size: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        /* Category Filters */
+        .category-filters {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .category-filters::-webkit-scrollbar {
+            height: 6px;
+        }
+        .category-filters::-webkit-scrollbar-track {
+            background: var(--cream);
+            border-radius: 10px;
+        }
+        .category-filters::-webkit-scrollbar-thumb {
+            background: var(--gold);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🍕 PANZZONI</h1>
+        <p>Autentica Cucina Italiana</p>
+    </div>
+
+    <div class="container">
+        
+        <!-- VISTA: PEDIDOS -->
+        <div id="view-order" class="view-section">
+            <div class="unit-selector">
+                <select id="unit-select">
+                    <option value="">📍 Seleccionar Unidad...</option>
+                    <option value="Alisas">Alisas</option>
+                    <option value="Lomas">Lomas</option>
+                    <option value="Marsol">Marsol</option>
+                    <option value="Pathos">Pathos</option>
+                    <option value="Rías">Rías</option>
+                    <option value="Tilos">Tilos</option>
+                </select>
+            </div>
+
+            <div class="category-filters">
+                <button class="btn-outline active" onclick="filterCategory('all', this)">Todos</button>
+                <button class="btn-outline" onclick="filterCategory('Bebidas', this)">Bebidas</button>
+                <button class="btn-outline" onclick="filterCategory('Harinas', this)">Harinas</button>
+                <button class="btn-outline" onclick="filterCategory('Salsas', this)">Salsas</button>
+                <button class="btn-outline" onclick="filterCategory('Lácteos', this)">Lácteos</button>
+                <button class="btn-outline" onclick="filterCategory('Verduras', this)">Verduras</button>
+                <button class="btn-outline" onclick="filterCategory('Conservas', this)">Conservas</button>
+                <button class="btn-outline" onclick="filterCategory('Aliños', this)">Aliños</button>
+                <button class="btn-outline" onclick="filterCategory('Postres', this)">Postres</button>
+                <button class="btn-outline" onclick="filterCategory('Congelados', this)">Congelados</button>
+                <button class="btn-outline" onclick="filterCategory('Embalaje', this)">Embalaje</button>
+                <button class="btn-outline" onclick="filterCategory('Carnes', this)">Carnes</button>
+                <button class="btn-outline" onclick="filterCategory('Limpieza', this)">Limpieza</button>
+                <button class="btn-outline" onclick="filterCategory('Otros', this)">Otros</button>
+            </div>
+
+            <input type="text" id="search-products" class="input" placeholder="🔍 Buscar productos..." onkeyup="renderProductList()">
+            <div id="products-container" class="card"></div>
+        </div>
+
+        <!-- VISTA: CARRITO -->
+        <div id="view-cart" class="view-section hidden">
+            <h2 class="section-header">🛒 Carrito de Pedido</h2>
+            <div id="cart-list" class="card"></div>
+            <div class="card">
+                <button class="btn btn-success" onclick="openExportModal('finalize')">☁️ Enviar Pedido</button>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px">
+                    <button class="btn btn-secondary" onclick="openExportModal('copy')">📋 Copiar</button>
+                    <button class="btn btn-secondary" onclick="exportCSV()">📊 CSV</button>
+                </div>
+                <button class="btn btn-outline" style="margin-top:12px; color:var(--red); border-color:var(--red); width:100%;" onclick="clearCart()">🗑️ Vaciar Carrito</button>
+            </div>
+        </div>
+
+        <!-- VISTA: ADMIN -->
+        <div id="view-admin" class="view-section hidden">
+            <h2 class="section-header">⚙️ Administración</h2>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px">
+                <button class="btn btn-primary" onclick="checkAdminAccess('new_prod')">+ Producto</button>
+                <button class="btn btn-secondary" onclick="checkAdminAccess('new_sup')">+ Proveedor</button>
+            </div>
+
+            <div style="margin-bottom:15px">
+                <button class="btn-outline active" id="tab-prod-btn" onclick="toggleAdminTab('prod')">Productos</button>
+                <button class="btn-outline" id="tab-sup-btn" onclick="toggleAdminTab('sup')">Proveedores</button>
+            </div>
+
+            <div id="admin-products-list" class="card" style="max-height:500px; overflow-y:auto;"></div>
+            <div id="admin-suppliers-list" class="card hidden" style="max-height:500px; overflow-y:auto;"></div>
+
+            <div class="card" style="margin-top:20px">
+                <h4 style="font-family: 'Cormorant Garamond', serif; font-size:1.5rem; color:var(--gold); margin-bottom:15px;">💾 Gestión de Datos</h4>
+                <p style="font-size:0.9em; color:#666; margin-bottom:15px;">Exporta o importa base de datos completa</p>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <button class="btn btn-secondary" onclick="exportBackup()">⬇️ Exportar</button>
+                    <button class="btn btn-outline" style="width:100%; margin:0;" onclick="document.getElementById('file-input').click()">⬆️ Importar</button>
+                </div>
+                <input type="file" id="file-input" accept=".json" style="display:none;" onchange="importBackup(event)">
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #fff9e6 0%, #fff5cc 100%);">
+                <h4 style="font-family: 'Cormorant Garamond', serif; font-size:1.3rem; color:var(--gold-dark); margin-bottom:10px;">🔄 Sincronización Supabase</h4>
+                <p style="font-size:0.85em; color:#666; margin-bottom:12px;">Estado: <span id="sync-status">No configurado</span></p>
+                <button class="btn btn-primary" onclick="syncWithSupabase()">Sincronizar Ahora</button>
+            </div>
+        </div>
+
+        <!-- VISTA: HISTORIAL -->
+        <div id="view-history" class="view-section hidden">
+            <h2 class="section-header">📋 Historial de Pedidos</h2>
+            <div id="history-list"></div>
+        </div>
+
+    </div>
+
+    <!-- Sticky Summary Bar -->
+    <div id="sticky-summary" class="summary-bar" onclick="changeView('view-cart')">
+        <div><span style="font-size:1.3rem;">🛍️</span> <span style="font-weight:bold; color:var(--gold);" id="sticky-count">0</span> artículos</div>
+        <div style="font-weight:600; color:var(--gold);">Ver Carrito →</div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast">Notificación</div>
+
+    <!-- Navigation -->
+    <div class="mobile-nav">
+        <button class="nav-item active" onclick="changeView('view-order')" id="nav-order">
+            <span class="nav-icon">🍽️</span>Pedir
+        </button>
+        <button class="nav-item" onclick="changeView('view-cart')" id="nav-cart">
+            <span class="nav-icon">🛒</span>Carrito
+        </button>
+        <button class="nav-item" onclick="changeView('view-history')" id="nav-history">
+            <span class="nav-icon">📋</span>Historial
+        </button>
+        <button class="nav-item" onclick="changeView('view-admin')" id="nav-admin">
+            <span class="nav-icon">⚙️</span>Admin
+        </button>
+    </div>
+
+    <!-- MODALES -->
+    <!-- PIN Modal -->
+    <div class="modal-overlay" id="modal-pin">
+        <div class="modal-content">
+            <h3>Seguridad</h3>
+            <p style="color:#666; margin-bottom:20px">Ingrese PIN de Supervisor</p>
+            <div class="pin-display" id="pin-display"></div>
+            <div class="pin-grid">
+                <button class="pin-btn" onclick="typePin(1)">1</button>
+                <button class="pin-btn" onclick="typePin(2)">2</button>
+                <button class="pin-btn" onclick="typePin(3)">3</button>
+                <button class="pin-btn" onclick="typePin(4)">4</button>
+                <button class="pin-btn" onclick="typePin(5)">5</button>
+                <button class="pin-btn" onclick="typePin(6)">6</button>
+                <button class="pin-btn" onclick="typePin(7)">7</button>
+                <button class="pin-btn" onclick="typePin(8)">8</button>
+                <button class="pin-btn" onclick="typePin(9)">9</button>
+                <button class="pin-btn" onclick="clearPin()">C</button>
+                <button class="pin-btn" onclick="typePin(0)">0</button>
+                <button class="pin-btn" style="background:var(--gold); color:var(--black);" onclick="submitPin()">OK</button>
+            </div>
+            <button style="margin-top:20px; border:none; background:none; color:#666; cursor:pointer;" onclick="closeModal('modal-pin')">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="modal-export">
+        <div class="modal-content">
+            <h3 id="export-title">Opciones de Exportación</h3>
+            <p style="color:#666; margin-bottom:20px">Selecciona cómo deseas agrupar:</p>
+            <div style="display:grid; gap:12px; margin-bottom:20px;">
+                <button class="btn btn-primary" onclick="exportGroupedOrder('supplier')">Por Proveedor</button>
+                <button class="btn btn-secondary" onclick="exportGroupedOrder('category')">Por Categoría</button>
+            </div>
+            <input type="hidden" id="export-mode">
+            <button style="margin-top:15px; border:none; background:none; color:#666; cursor:pointer;" onclick="closeModal('modal-export')">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- History Details Modal -->
+    <div class="modal-overlay" id="modal-history-details">
+        <div class="modal-content">
+            <h3 id="history-details-title">Detalles del Pedido</h3>
+            <p id="history-details-unit" style="color:var(--gold); margin-bottom:20px; font-weight:bold;"></p>
+            <div id="history-details-list" style="text-align:left; max-height:40vh; overflow-y:auto; padding:5px 0;"></div>
+            <button class="btn btn-secondary" style="margin-top:20px" onclick="closeModal('modal-history-details')">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal-overlay" id="modal-product">
+        <div class="modal-content">
+            <h3 id="modal-prod-title">Producto</h3>
+            <input type="hidden" id="edit-prod-id">
+            <input type="text" id="p-name" class="input" placeholder="Nombre del producto">
+            <input type="text" id="p-brand" class="input" placeholder="Marca">
+            <select id="p-cat" class="input">
+                <option value="Bebidas">Bebidas</option>
+                <option value="Harinas">Harinas</option>
+                <option value="Salsas">Salsas</option>
+                <option value="Lácteos">Lácteos</option>
+                <option value="Verduras">Verduras</option>
+                <option value="Conservas">Conservas</option>
+                <option value="Aliños">Aliños</option>
+                <option value="Postres">Postres</option>
+                <option value="Congelados">Congelados</option>
+                <option value="Carnes">Carnes</option>
+                <option value="Embalaje">Embalaje</option>
+                <option value="Limpieza">Limpieza</option>
+                <option value="Otros">Otros</option>
+            </select>
+            <input type="text" id="p-pack" class="input" placeholder="Formato (ej: Caja 6u)">
+            <select id="p-supplier" class="input"></select>
+            <button class="btn btn-success" onclick="saveProductData()">Guardar</button>
+            <button class="btn btn-secondary" style="margin-top:10px" onclick="closeModal('modal-product')">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Supplier Modal -->
+    <div class="modal-overlay" id="modal-supplier">
+        <div class="modal-content">
+            <h3 id="modal-sup-title">Proveedor</h3>
+            <input type="hidden" id="edit-sup-idx">
+            <input type="text" id="s-name" class="input" placeholder="Nombre del Proveedor">
+            <button class="btn btn-success" onclick="saveSupplierData()">Guardar</button>
+            <button class="btn btn-secondary" style="margin-top:10px" onclick="closeModal('modal-supplier')">Cancelar</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURACIÓN SUPABASE
+        // ==========================================
+        const SUPABASE_URL = 'TU_SUPABASE_URL'; // Reemplazar con tu URL
+        const SUPABASE_KEY = 'TU_SUPABASE_KEY'; // Reemplazar con tu key
+        let supabase = null;
+
+        // Inicializar Supabase si está configurado
+        if (SUPABASE_URL !== 'TU_SUPABASE_URL' && SUPABASE_KEY !== 'TU_SUPABASE_KEY') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            document.getElementById('sync-status').textContent = '✅ Conectado';
+            document.getElementById('sync-status').style.color = 'var(--green)';
+        }
+
+        // ==========================================
+        // ESTADO INICIAL
+        // ==========================================
+        const defaultProds = [
+            { id: 1, name: "Harina 000", brand: "Cañuelas", cat: "Harinas", pack: "Saco 25kg", supplier: "Proveedor A" },
+            { id: 2, name: "Mozzarella", brand: "Barraza", cat: "Lácteos", pack: "Caja 20kg", supplier: "Proveedor B" },
+            { id: 3, name: "Tomate San Marzano", brand: "Mutti", cat: "Conservas", pack: "Lata 400g", supplier: "Proveedor A" },
+            { id: 4, name: "Aceite Oliva Extra Virgen", brand: "Carbonell", cat: "Aliños", pack: "Botella 1L", supplier: "Proveedor C" }
+        ];
+        
+        let state = {
+            products: JSON.parse(localStorage.getItem('pz_products')) || defaultProds,
+            suppliers: JSON.parse(localStorage.getItem('pz_suppliers')) || ["Proveedor A", "Proveedor B", "Proveedor C"],
+            cart: {},
+            history: JSON.parse(localStorage.getItem('pz_history')) || []
+        };
+
+        let isAdminLoggedIn = false;
+        let currentPin = "";
+        let pendingAction = "";
+        let targetId = null;
+
+        // ==========================================
+        // NAVEGACIÓN
+        // ==========================================
+        function changeView(id) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            const map = {
+                'view-order': 'nav-order',
+                'view-cart': 'nav-cart',
+                'view-admin': 'nav-admin',
+                'view-history': 'nav-history'
+            };
+
+            if (id === 'view-admin') {
+                if (!isAdminLoggedIn) {
+                    requestAdminPIN('grant_view_access');
+                    return;
+                }
+                document.getElementById(id).classList.remove('hidden');
+                document.getElementById(map[id]).classList.add('active');
+                renderAdminLists();
+                window.scrollTo(0, 0);
+                return;
+            }
+
+            document.getElementById(id).classList.remove('hidden');
+            document.getElementById(map[id]).classList.add('active');
+
+            if (id === 'view-cart') renderCart();
+            if (id === 'view-history') renderHistory();
+            window.scrollTo(0, 0);
+        }
+
+        // ==========================================
+        // PRODUCTOS Y CARRITO
+        // ==========================================
+        function renderProductList(filter = 'all') {
+            const container = document.getElementById('products-container');
+            const search = document.getElementById('search-products').value.toLowerCase();
+            container.innerHTML = '';
+            
+            const list = state.products.filter(p => {
+                const matchSearch = p.name.toLowerCase().includes(search) || 
+                                  p.brand.toLowerCase().includes(search);
+                const matchCat = filter === 'all' || p.cat === filter;
+                return matchSearch && matchCat;
+            });
+
+            if (!list.length) {
+                container.innerHTML = '<div style="text-align:center; padding:40px; color:#999; font-style:italic;">No hay productos disponibles</div>';
+                return;
+            }
+
+            list.forEach(p => {
+                const qty = state.cart[p.id] || 0;
+                const inCart = qty > 0 ? 'in-cart' : '';
+                
+                container.innerHTML += `
+                <div class="product-item ${inCart}">
+                    <div style="flex:1">
+                        <div style="font-weight:700; color:var(--black); margin-bottom:4px;">${p.name}</div>
+                        <div style="font-size:0.85rem; color:#666;">${p.brand} · ${p.pack}</div>
+                        <div style="font-size:0.75rem; color:var(--gold); margin-top:4px;">📦 ${p.supplier}</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px; background:var(--cream); padding:6px; border-radius:12px;">
+                        <button class="action-btn" style="width:32px; height:32px; background:white; font-weight:bold; color:var(--red);" onclick="updateCart(${p.id}, -1)">−</button>
+                        <div style="min-width:25px; text-align:center; font-weight:bold; color:var(--gold);">${qty}</div>
+                        <button class="action-btn" style="width:32px; height:32px; background:white; font-weight:bold; color:var(--green);" onclick="updateCart(${p.id}, 1)">+</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function filterCategory(cat, btn) {
+            document.querySelectorAll('.btn-outline').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderProductList(cat);
+        }
+
+        function updateCart(id, delta) {
+            if (!state.cart[id]) state.cart[id] = 0;
+            state.cart[id] += delta;
+            if (state.cart[id] <= 0) delete state.cart[id];
+            
+            const activeBtn = document.querySelector('.btn-outline.active');
+            const currentFilter = activeBtn ? (activeBtn.textContent === 'Todos' ? 'all' : activeBtn.textContent) : 'all';
+            renderProductList(currentFilter);
+            
+            let total = 0;
+            Object.values(state.cart).forEach(v => total += v);
+            document.getElementById('sticky-count').textContent = total;
+            
+            const bar = document.getElementById('sticky-summary');
+            if (total > 0) bar.classList.add('visible');
+            else bar.classList.remove('visible');
+        }
+
+        // ==========================================
+        // SEGURIDAD (PIN: 8128)
+        // ==========================================
+        function checkAdminAccess(action, id = null) {
+            if (isAdminLoggedIn) {
+                targetId = id;
+                pendingAction = action;
+                executeAdminAction();
+            } else {
+                requestAdminPIN(action, id);
+            }
+        }
+
+        function requestAdminPIN(action, id = null) {
+            pendingAction = action;
+            targetId = id;
+            currentPin = "";
+            document.getElementById('pin-display').textContent = "";
+            document.getElementById('modal-pin').classList.add('active');
+        }
+
+        function typePin(n) {
+            if (currentPin.length < 4) {
+                currentPin += n;
+                document.getElementById('pin-display').textContent = "•".repeat(currentPin.length);
+            }
+        }
+
+        function clearPin() {
+            currentPin = "";
+            document.getElementById('pin-display').textContent = "";
+        }
+
+        function submitPin() {
+            if (currentPin === "8128") {
+                closeModal('modal-pin');
+                isAdminLoggedIn = true;
+                
+                if (pendingAction === 'grant_view_access') {
+                    changeView('view-admin');
+                    showToast("🔓 Acceso Autorizado");
+                } else {
+                    executeAdminAction();
+                }
+            } else {
+                showToast("⛔ PIN INCORRECTO");
+                setTimeout(clearPin, 500);
+            }
+        }
+
+        function executeAdminAction() {
+            if (pendingAction === 'new_prod') openProductModal();
+            if (pendingAction === 'edit_prod') openProductModal(targetId);
+            if (pendingAction === 'del_prod') deleteProduct(targetId);
+            if (pendingAction === 'new_sup') openSupplierModal();
+            if (pendingAction === 'edit_sup') openSupplierModal(targetId);
+            if (pendingAction === 'del_sup') deleteSupplier(targetId);
+        }
+
+        // ==========================================
+        // CRUD PRODUCTOS
+        // ==========================================
+        function openProductModal(id = null) {
+            const sel = document.getElementById('p-supplier');
+            sel.innerHTML = state.suppliers.map(s => `<option value="${s}">${s}</option>`).join('');
+
+            if (id) {
+                const p = state.products.find(x => x.id === id);
+                document.getElementById('modal-prod-title').textContent = "Editar Producto";
+                document.getElementById('edit-prod-id').value = id;
+                document.getElementById('p-name').value = p.name;
+                document.getElementById('p-brand').value = p.brand;
+                document.getElementById('p-cat').value = p.cat;
+                document.getElementById('p-pack').value = p.pack;
+                document.getElementById('p-supplier').value = p.supplier;
+            } else {
+                document.getElementById('modal-prod-title').textContent = "Nuevo Producto";
+                document.getElementById('edit-prod-id').value = "";
+                document.getElementById('p-name').value = "";
+                document.getElementById('p-brand').value = "";
+                document.getElementById('p-pack').value = "";
+            }
+            document.getElementById('modal-product').classList.add('active');
+        }
+
+        function saveProductData() {
+            const idStr = document.getElementById('edit-prod-id').value;
+            const name = document.getElementById('p-name').value;
+            const brand = document.getElementById('p-brand').value;
+            const cat = document.getElementById('p-cat').value;
+            const pack = document.getElementById('p-pack').value;
+            const sup = document.getElementById('p-supplier').value;
+            
+            if (!name || !brand) {
+                showToast("⚠️ Faltan datos requeridos");
+                return;
+            }
+
+            if (idStr) {
+                const index = state.products.findIndex(p => p.id == idStr);
+                if (index !== -1) {
+                    state.products[index] = { id: parseInt(idStr), name, brand, cat, pack, supplier: sup };
+                    showToast("✅ Producto Actualizado");
+                }
+            } else {
+                state.products.push({ id: Date.now(), name, brand, cat, pack, supplier: sup });
+                showToast("✅ Producto Creado");
+            }
+
+            localStorage.setItem('pz_products', JSON.stringify(state.products));
+            closeModal('modal-product');
+            renderAdminLists();
+            renderProductList();
+        }
+
+        function deleteProduct(id) {
+            if (confirm("¿Seguro que deseas eliminar este producto?")) {
+                state.products = state.products.filter(p => p.id !== id);
+                localStorage.setItem('pz_products', JSON.stringify(state.products));
+                renderAdminLists();
+                renderProductList();
+                showToast("🗑️ Producto Eliminado");
+            }
+        }
+
+        // ==========================================
+        // CRUD PROVEEDORES
+        // ==========================================
+        function openSupplierModal(idx = null) {
+            if (idx !== null) {
+                document.getElementById('modal-sup-title').textContent = "Editar Proveedor";
+                document.getElementById('edit-sup-idx').value = idx;
+                document.getElementById('s-name').value = state.suppliers[idx];
+            } else {
+                document.getElementById('modal-sup-title').textContent = "Nuevo Proveedor";
+                document.getElementById('edit-sup-idx').value = "";
+                document.getElementById('s-name').value = "";
+            }
+            document.getElementById('modal-supplier').classList.add('active');
+        }
+
+        function saveSupplierData() {
+            const idxStr = document.getElementById('edit-sup-idx').value;
+            const name = document.getElementById('s-name').value;
+            
+            if (!name) {
+                showToast("⚠️ Ingrese nombre del proveedor");
+                return;
+            }
+
+            if (idxStr !== "") {
+                state.suppliers[parseInt(idxStr)] = name;
+                showToast("✅ Proveedor Actualizado");
+            } else {
+                state.suppliers.push(name);
+                showToast("✅ Proveedor Agregado");
+            }
+
+            localStorage.setItem('pz_suppliers', JSON.stringify(state.suppliers));
+            closeModal('modal-supplier');
+            renderAdminLists();
+        }
+
+        function deleteSupplier(idx) {
+            if (confirm("¿Eliminar proveedor? Esto afectará productos asociados.")) {
+                state.suppliers.splice(idx, 1);
+                localStorage.setItem('pz_suppliers', JSON.stringify(state.suppliers));
+                renderAdminLists();
+                showToast("🗑️ Proveedor Eliminado");
+            }
+        }
+
+        // ==========================================
+        // RENDERIZADO ADMIN
+        // ==========================================
+        function toggleAdminTab(tab) {
+            if (tab === 'prod') {
+                document.getElementById('admin-products-list').classList.remove('hidden');
+                document.getElementById('admin-suppliers-list').classList.add('hidden');
+                document.getElementById('tab-prod-btn').classList.add('active');
+                document.getElementById('tab-sup-btn').classList.remove('active');
+            } else {
+                document.getElementById('admin-products-list').classList.add('hidden');
+                document.getElementById('admin-suppliers-list').classList.remove('hidden');
+                document.getElementById('tab-prod-btn').classList.remove('active');
+                document.getElementById('tab-sup-btn').classList.add('active');
+            }
+        }
+
+        function renderAdminLists() {
+            const pDiv = document.getElementById('admin-products-list');
+            pDiv.innerHTML = state.products.map(p => `
+                <div class="admin-item">
+                    <div>
+                        <div style="font-weight:bold; color:var(--black);">${p.name}</div>
+                        <div style="font-size:0.8rem; color:#666;">${p.brand} | ${p.supplier}</div>
+                    </div>
+                    <div style="display:flex">
+                        <button class="action-btn btn-edit" onclick="checkAdminAccess('edit_prod', ${p.id})">✏️</button>
+                        <button class="action-btn btn-del" onclick="checkAdminAccess('del_prod', ${p.id})">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+
+            const sDiv = document.getElementById('admin-suppliers-list');
+            sDiv.innerHTML = state.suppliers.map((s, idx) => `
+                <div class="admin-item">
+                    <div style="font-weight:bold; color:var(--black);">${s}</div>
+                    <div style="display:flex">
+                        <button class="action-btn btn-edit" onclick="checkAdminAccess('edit_sup', ${idx})">✏️</button>
+                        <button class="action-btn btn-del" onclick="checkAdminAccess('del_sup', ${idx})">🗑️</button>
+                    </div>
+                </div>
