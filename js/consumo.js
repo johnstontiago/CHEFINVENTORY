@@ -273,4 +273,13 @@ async function confirmarConsumo() {
     } finally {
         hideLoading();
     }
+
+    } catch (error) {
+        console.error('Error registrando consumo:', error);
+        // Esto te dirá el error real en una ventana emergente
+        alert("Error técnico: " + (error.message || "Falla en la base de datos"));
+        showToast('Error al registrar consumo', 'error');
+    } finally {
+        hideLoading();
+    }
 }

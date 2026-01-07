@@ -1,7 +1,8 @@
 {
-    "name": "chefmanager",
-    "compatibility_date": "2025-12-23",
-    "assets": {
-        "directory": "./"
-    }
+  "name": "inventorychef",
+  "compatibility_date": "2024-01-01",
+  "main": "worker/index.js",
+  "site": {
+    "bucket": "."
+  }
 }

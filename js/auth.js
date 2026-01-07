@@ -150,8 +150,8 @@ async function showRegister() {
     try {
         const unidades = await DB.getUnidades();
         const select = document.getElementById('register-unidad');
-        select.innerHTML = '<option value="">Seleccionar Unidad...</option>' +
-            unidades.map(u => `<option value="${u.id}">${u.nombre}</option>`).join('');
+        select.innerHTML = '<option value="">Seleccionar Unidad...</option>' + 
+          unidades.map(u => `<option value="${u.id}">${u.nombre}</option>`).join('');
     } catch (error) {
         console.error('Error cargando unidades:', error);
     }
